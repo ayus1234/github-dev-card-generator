@@ -5,6 +5,14 @@ Generate beautiful, AI-powered developer profile cards from any public GitHub us
 ![GitHub Dev Card Generator](https://img.shields.io/badge/Gemini-AI-blue?logo=google&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Available_Now-success?style=flat)](https://github-dev-card-generator-15593284604.europe-west1.run.app/)
+
+## 🌐 Live Demo
+
+You can try out the live version of the generator deployed on Google Cloud Run here:
+👉 **[Live Application Link](https://github-dev-card-generator-15593284604.europe-west1.run.app/)**
+
+---
 
 ## ✨ Features
 
