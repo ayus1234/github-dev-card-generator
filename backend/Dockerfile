@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create static directory for cards
-RUN mkdir -p static/cards
+RUN mkdir -p frontend/cards
 
 # Expose the backend port
 EXPOSE 8080

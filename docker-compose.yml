@@ -11,7 +11,7 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-}
     volumes:
-      - cards_data:/app/static/cards
+      - cards_data:/app/frontend/cards
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s

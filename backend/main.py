@@ -38,7 +38,7 @@ runner = Runner(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create static/cards directory at startup
-    cards_dir = pathlib.Path(__file__).parent / "static" / "cards"
+    cards_dir = pathlib.Path(__file__).parent / "frontend" / "cards"
     cards_dir.mkdir(parents=True, exist_ok=True)
     yield
 
@@ -131,7 +131,7 @@ async def generate_card(request: GenerateRequest):
                         final_text = part.text  # Keep last text response
 
         # Check if card was saved
-        card_path = pathlib.Path(__file__).parent / "static" / "cards" / f"{username}.html"
+        card_path = pathlib.Path(__file__).parent / "frontend" / "cards" / f"{username}.html"
         if card_path.exists():
             card_url = f"/card/{username}"
         else:
@@ -157,7 +157,7 @@ async def generate_card(request: GenerateRequest):
 @app.get("/card/{username}", response_class=HTMLResponse)
 async def get_card(username: str):
     """Serve a saved dev card HTML file."""
-    card_path = pathlib.Path(__file__).parent / "static" / "cards" / f"{username}.html"
+    card_path = pathlib.Path(__file__).parent / "frontend" / "cards" / f"{username}.html"
     if not card_path.exists():
         raise HTTPException(status_code=404, detail=f"Card not found for '{username}'")
     return HTMLResponse(content=card_path.read_text(encoding="utf-8"))
