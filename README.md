@@ -23,13 +23,8 @@ Generate beautiful, AI-powered developer profile cards from any public GitHub us
 ```text
 github-dev-card-generator/
 │
-├── frontend/                  # Web Interface
-│   ├── index.html             # Main HTML structure
-│   ├── style.css              # External stylesheet (Animations, UI tokens)
-│   ├── script.js              # External JS logic (API calls, UI state)
-│   └── Dockerfile             # Nginx server for frontend
-│
 ├── backend/                   # FastAPI Server
+│   ├── static/                # Web Interface (HTML, CSS, JS)
 │   ├── main.py                # REST API endpoints & server setup
 │   ├── agent.py               # Google ADK agent configuration for Gemini
 │   ├── mcp_server.py          # FastMCP server logic
@@ -69,8 +64,8 @@ github-dev-card-generator/
    ```
 
 4. **Access the App:**
-   - **Frontend:** Open your browser and go to `http://localhost:3000`
-   - **Backend API:** Available at `http://localhost:8080` (Check `http://localhost:8080/docs` for Swagger UI)
+   - Open your browser and go to `http://localhost:8080`
+   - **Backend API Docs:** Available at `http://localhost:8080/docs`
 
 ---
 

@@ -16,6 +16,7 @@ load_dotenv(dotenv_path=pathlib.Path(__file__).parent / ".env")
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from google.adk.runners import Runner
@@ -58,6 +59,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve static files (CSS, JS, generated cards)
+app.mount("/static", StaticFiles(directory=str(pathlib.Path(__file__).parent / "static")), name="static")
+
 # ── Models ────────────────────────────────────────────────────────────────────
 class GenerateRequest(BaseModel):
     username: str
@@ -68,6 +72,12 @@ class GenerateResponse(BaseModel):
     message: str
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root():
+    """Serve the main frontend application."""
+    index_path = pathlib.Path(__file__).parent / "static" / "index.html"
+    return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
 
 @app.get("/health")
 async def health_check():

@@ -18,16 +18,5 @@ services:
       timeout: 10s
       retries: 3
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:80"
-    environment:
-      - BACKEND_URL=http://localhost:8080
-    depends_on:
-      - backend
-
 volumes:
   cards_data:
