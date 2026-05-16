@@ -24,7 +24,11 @@ Generate beautiful, AI-powered developer profile cards from any public GitHub us
 github-dev-card-generator/
 │
 ├── backend/                   # FastAPI Server
-│   ├── static/                # Web Interface (HTML, CSS, JS)
+│   ├── frontend/              # Web Interface
+│   │   ├── index.html         # Main HTML structure
+│   │   ├── style.css          # External stylesheet
+│   │   ├── script.js          # API calls and UI state
+│   │   └── cards/             # Generated HTML Dev Cards
 │   ├── main.py                # REST API endpoints & server setup
 │   ├── agent.py               # Google ADK agent configuration for Gemini
 │   ├── mcp_server.py          # FastMCP server logic
