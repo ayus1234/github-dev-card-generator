@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linus Torvalds — Dev Card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: linear-gradient(135deg, #0f0a1a 0%, #1a0d2d 50%, #0f0a1a 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #c9d1d9;
+  }
+  .card {
+    background: rgba(26, 13, 45, 0.95);
+    border: 1px solid #a371f730;
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 440px;
+    width: 100%;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 60px #a371f710, 0 20px 60px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #a371f7, transparent);
+  }
+  .theme-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(163, 113, 247, 0.1);
+    border: 1px solid #a371f730;
+    color: #a371f7;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px solid #a371f7;
+    box-shadow: 0 0 20px #a371f730;
+    object-fit: cover;
+  }
+  .header-info h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f0f6fc;
+    line-height: 1.2;
+  }
+  .header-info .username {
+    color: #a371f7;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+  .header-info .location {
+    color: #8b949e;
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .vibe {
+    background: rgba(163, 113, 247, 0.1);
+    border-left: 3px solid #a371f7;
+    padding: 12px 16px;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 20px;
+    font-style: italic;
+    font-size: 13px;
+    color: #c9d1d9;
+    line-height: 1.5;
+  }
+  .stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    flex: 1;
+    text-align: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 12px 8px;
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #a371f7;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .stat-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #8b949e;
+    margin-top: 2px;
+  }
+  .section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #8b949e;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .badge {
+    background: rgba(163, 113, 247, 0.1);
+    border: 1px solid #a371f730;
+    color: #a371f7;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .repo {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .repo:hover { border-color: #a371f750; }
+  .repo-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .repo-icon { font-size: 14px; }
+  .repo-name {
+    color: #a371f7;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .repo-name:hover { text-decoration: underline; }
+  .stars {
+    margin-left: auto;
+    font-size: 12px;
+    color: #8b949e;
+  }
+  .repo-desc {
+    font-size: 12px;
+    color: #8b949e;
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  .repo-lang {
+    font-size: 11px;
+    color: #8b949e;
+  }
+  .lang-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #a371f7;
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+  .lang-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.05);
+  }
+  .lang-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .lang-label {
+    font-size: 11px;
+    color: #8b949e;
+    display: flex;
+    align-items: center;
+  }
+  .fun-fact {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #8b949e;
+    line-height: 1.5;
+  }
+  .fun-fact strong {
+    color: #a371f7;
+  }
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px;
+    color: #484f58;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .footer a { color: #8b5cf6; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="theme-badge">🌟 open-source-hero</span>
+  <div class="header">
+    <img class="avatar" src="https://avatars.githubusercontent.com/u/1024025?v=4" alt="Linus Torvalds" />
+    <div class="header-info">
+      <h1>Linus Torvalds</h1>
+      <div class="username">@torvalds</div>
+      <div class="location">📍 Portland, OR</div>
+    </div>
+  </div>
+
+  <div class="vibe">"A low-level maestro who crafts fundamental tools and tinkers with both software and audio hardware."</div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value">11</div>
+      <div class="stat-label">Repos</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">303131</div>
+      <div class="stat-label">Followers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">0</div>
+      <div class="stat-label">Following</div>
+    </div>
+  </div>
+
+  <div class="section-title">Top Skills</div>
+  <div class="badges"><span class="badge">C Programming</span><span class="badge">Systems Programming</span><span class="badge">Digital Audio & Embedded Design</span></div>
+
+  <div class="section-title">Languages</div>
+  <div class="lang-bar"><div style="width:81.8%;background:#f1e05a;height:100%;"></div><div style="width:9.1%;background:#3572A5;height:100%;"></div><div style="width:9.1%;background:#e34c26;height:100%;"></div></div>
+  <div class="lang-labels"><span class="lang-label"><span style="background:#f1e05a;width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;"></span>C 82%</span><span class="lang-label"><span style="background:#3572A5;width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;"></span>OpenSCAD 9%</span><span class="lang-label"><span style="background:#e34c26;width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;"></span>C++ 9%</span></div>
+
+  <div class="section-title">Top Repositories</div>
+  
+        <div class="repo">
+            <div class="repo-header">
+                <span class="repo-icon">📁</span>
+                <a href="https://github.com/torvalds/HunspellColorize" target="_blank" class="repo-name">HunspellColorize</a>
+                <span class="stars">⭐ 344</span>
+            </div>
+            <p class="repo-desc">Wrapper around 'less' to colorize spelling mistakes using Hunspell</p>
+            <span class="repo-lang"><span class="lang-dot"></span>C</span>
+        </div>
+        <div class="repo">
+            <div class="repo-header">
+                <span class="repo-icon">📁</span>
+                <a href="https://github.com/torvalds/AudioNoise" target="_blank" class="repo-name">AudioNoise</a>
+                <span class="stars">⭐ 4366</span>
+            </div>
+            <p class="repo-desc">Random digital audio effects</p>
+            <span class="repo-lang"><span class="lang-dot"></span>C</span>
+        </div>
+        <div class="repo">
+            <div class="repo-header">
+                <span class="repo-icon">📁</span>
+                <a href="https://github.com/torvalds/GuitarPedal" target="_blank" class="repo-name">GuitarPedal</a>
+                <span class="stars">⭐ 1917</span>
+            </div>
+            <p class="repo-desc">Linus learns analog circuits</p>
+            <span class="repo-lang"><span class="lang-dot"></span>C</span>
+        </div>
+
+  <div class="fun-fact">
+    <strong>💡 Fun fact:</strong> He enjoys meticulously crafting custom guitar pedals, even designing their physical enclosures using OpenSCAD, revealing a passion for both analog circuits and 3D modeling.
+  </div>
+
+  <div class="footer">
+    Generated by <a href="#">GitHub Dev Card Generator</a>
+  </div>
+</div>
+</body>
+</html>
