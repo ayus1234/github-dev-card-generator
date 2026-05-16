@@ -272,6 +272,7 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{name} — Dev Card</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" type="image/png" href="/frontend/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
