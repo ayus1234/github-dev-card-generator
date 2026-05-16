@@ -8,14 +8,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/requirements.txt ./backend/
+RUN pip install --no-cache-dir -r backend/requirements.txt
 
 # Copy application source
 COPY . .
 
 # Create static directory for cards
 RUN mkdir -p frontend/cards
+
+# Set working directory to backend to run uvicorn
+WORKDIR /app/backend
 
 # Expose the backend port
 EXPOSE 8080

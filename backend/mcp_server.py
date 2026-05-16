@@ -712,7 +712,7 @@ def save_card(username: str, html: str) -> str:
     Input: username and the HTML string from generate_card_html.
     Returns: the relative URL path to the saved card.
     """
-    cards_dir = pathlib.Path(__file__).parent / "frontend" / "cards"
+    cards_dir = pathlib.Path(__file__).parent.parent / "frontend" / "cards"
     cards_dir.mkdir(parents=True, exist_ok=True)
 
     filepath = cards_dir / f"{username}.html"
