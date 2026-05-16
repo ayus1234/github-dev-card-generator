@@ -43,12 +43,13 @@ github-dev-card-generator/
 
 ---
 
-## 🛠️ Recent Updates
+## 🔮 Future Scope and Improvements
 
-- **Modular Refactor:** Extracted all internal `<style>` and `<script>` blocks into dedicated `style.css` and `script.js` files for a cleaner, maintainable structure.
-- **Brand Identity:** Replaced the generic placeholder emoji logo with the official GitHub SVG logo to enhance professional aesthetics.
-- **Security Patch:** Updated `.gitignore` to track and ignore all `.env` files, successfully resolving GitHub Push Protection violations and securing the Gemini API keys.
-- **Git Push Fix:** Handled rebasing and force pushes to successfully deploy the initial commit to the remote GitHub repository without merge conflicts.
+- **Authentication Integration:** Allow users to log in with their GitHub account to generate private profile cards.
+- **Card Customization:** Add themes (light, dark, colorful) and layout options for the generated cards.
+- **Export Formats:** Provide functionality to download the generated dev card as a high-resolution PNG or PDF.
+- **More Platforms:** Extend support to generate cards from other developer platforms like GitLab or Bitbucket.
+- **Analytics:** Add simple analytics to track how many times a shared card has been viewed.
 
 ---
 
