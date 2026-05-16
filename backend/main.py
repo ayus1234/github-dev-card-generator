@@ -59,8 +59,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static files (CSS, JS, generated cards)
-app.mount("/static", StaticFiles(directory=str(pathlib.Path(__file__).parent / "static")), name="static")
+# Serve static files (CSS, JS) from frontend folder
+app.mount("/frontend", StaticFiles(directory=str(pathlib.Path(__file__).parent / "frontend")), name="frontend")
 
 # ── Models ────────────────────────────────────────────────────────────────────
 class GenerateRequest(BaseModel):
@@ -76,7 +76,7 @@ class GenerateResponse(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Serve the main frontend application."""
-    index_path = pathlib.Path(__file__).parent / "static" / "index.html"
+    index_path = pathlib.Path(__file__).parent / "frontend" / "index.html"
     return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
 
 @app.get("/health")
