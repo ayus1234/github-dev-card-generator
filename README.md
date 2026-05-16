@@ -43,16 +43,6 @@ github-dev-card-generator/
 
 ---
 
-## 🔮 Future Scope and Improvements
-
-- **Authentication Integration:** Allow users to log in with their GitHub account to generate private profile cards.
-- **Card Customization:** Add themes (light, dark, colorful) and layout options for the generated cards.
-- **Export Formats:** Provide functionality to download the generated dev card as a high-resolution PNG or PDF.
-- **More Platforms:** Extend support to generate cards from other developer platforms like GitLab or Bitbucket.
-- **Analytics:** Add simple analytics to track how many times a shared card has been viewed.
-
----
-
 ## 🚀 How to Run Locally
 
 ### Prerequisites
@@ -81,6 +71,16 @@ github-dev-card-generator/
 4. **Access the App:**
    - **Frontend:** Open your browser and go to `http://localhost:3000`
    - **Backend API:** Available at `http://localhost:8080` (Check `http://localhost:8080/docs` for Swagger UI)
+
+---
+
+## 🔮 Future Scope and Improvements
+
+- **Authentication Integration:** Allow users to log in with their GitHub account to generate private profile cards.
+- **Card Customization:** Add themes (light, dark, colorful) and layout options for the generated cards.
+- **Export Formats:** Provide functionality to download the generated dev card as a high-resolution PNG or PDF.
+- **More Platforms:** Extend support to generate cards from other developer platforms like GitLab or Bitbucket.
+- **Analytics:** Add simple analytics to track how many times a shared card has been viewed.
 
 ---
 
