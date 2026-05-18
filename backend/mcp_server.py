@@ -1,8 +1,8 @@
 """
-MCP Server for GitHub Dev Card Generator.
-Exposes 4 tools via FastMCP:
+MCP Server for Dev Card Generator.
+Exposes tools via FastMCP:
   1. scrape_github   — fetch public GitHub profile data
-  2. analyze_profile — AI-powered profile analysis via Gemini
+  2. analyze_profile — AI-powered profile analysis via Groq (Llama)
   3. generate_card_html — render a themed HTML dev card
   4. save_card       — persist the card to disk
 """
@@ -13,14 +13,14 @@ import pathlib
 import httpx
 from dotenv import load_dotenv
 from fastmcp import FastMCP
-from google import genai
+from groq import Groq
 
 # Load .env relative to this file so it works regardless of cwd
 load_dotenv(dotenv_path=pathlib.Path(__file__).parent / ".env")
 
-# ── Gemini client setup ──────────────────────────────────────────────────────
-gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-GEMINI_MODEL = "gemini-2.0-flash-lite"
+# ── Groq client setup ────────────────────────────────────────────────────────
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 # ── FastMCP server ────────────────────────────────────────────────────────────
 mcp = FastMCP("GitHubCardTools")
@@ -100,11 +100,20 @@ def scrape_github(username: str) -> str:
 @mcp.tool
 def analyze_profile(github_data: str) -> str:
     """
-    Analyze a developer's GitHub profile using Gemini AI.
+    Analyze a developer's profile using Groq (Llama).
     Input: JSON string of github profile data from scrape_github.
     Returns JSON with: developer_vibe, top_skills, fun_fact, card_theme.
     card_theme is one of: hacker, builder, researcher, designer, open-source-hero.
     """
+    # Safe strip of massive base64 strings (like avatar_url) to avoid token context limits
+    try:
+        data_clean = json.loads(github_data)
+        if "avatar_url" in data_clean:
+            data_clean["avatar_url"] = "[avatar_image_data_embedded]"
+        github_data_clean = json.dumps(data_clean, indent=2)
+    except Exception:
+        github_data_clean = github_data
+
     prompt = f"""You are analyzing a GitHub developer profile. Based on the following data, provide a JSON response with exactly these fields:
 
 1. "developer_vibe": A single catchy sentence describing this developer's personality/style (e.g., "A relentless systems architect who speaks fluent kernel")
@@ -118,18 +127,20 @@ def analyze_profile(github_data: str) -> str:
    - open-source-hero: many stars, widely-used projects, community contributor
 
 GitHub Profile Data:
-{github_data}
+{github_data_clean}
 
 Respond with ONLY valid JSON, no markdown, no code fences."""
 
-    response = gemini_client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
+    response = groq_client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+        max_tokens=512,
     )
+    text = response.choices[0].message.content.strip()
 
     # Parse and validate
     try:
-        text = response.text.strip()
         # Strip markdown code fences if present
         if text.startswith("```"):
             text = text.split("\n", 1)[1]
@@ -150,13 +161,363 @@ Respond with ONLY valid JSON, no markdown, no code fences."""
 # Tool 3: Generate Card HTML
 # ─────────────────────────────────────────────────────────────────────────────
 @mcp.tool
-def generate_card_html(username: str, github_data: str, analysis: str) -> str:
+def scrape_gitlab(username: str) -> str:
+    """
+    Fetch public GitLab profile data for a given username.
+    Returns JSON with: name, bio, location, public_repos, followers,
+    avatar_url, top 6 projects (name, stars, language, description),
+    and aggregated language stats.
+    """
+    headers = {"Accept": "application/json"}
+    gitlab_token = os.getenv("GITLAB_TOKEN")
+    if gitlab_token:
+        headers["PRIVATE-TOKEN"] = gitlab_token
+
+    with httpx.Client(timeout=30) as client:
+        # Search for user
+        search_resp = client.get(
+            f"https://gitlab.com/api/v4/users",
+            params={"username": username},
+            headers=headers,
+        )
+        search_resp.raise_for_status()
+        users = search_resp.json()
+        if not users:
+            return json.dumps({"error": f"GitLab user '{username}' not found."})
+        user = users[0]
+        user_id = user["id"]
+
+        # Fetch projects
+        projects_resp = client.get(
+            f"https://gitlab.com/api/v4/users/{user_id}/projects",
+            params={"order_by": "star_count", "sort": "desc", "per_page": 30},
+            headers=headers,
+        )
+        projects_resp.raise_for_status()
+        projects = projects_resp.json()
+
+    top_repos = [
+        {
+            "name": p["name"],
+            "stars": p.get("star_count", 0),
+            "language": p.get("language"),
+            "description": p.get("description") or "",
+        }
+        for p in projects[:6]
+    ]
+
+    lang_count: dict[str, int] = {}
+    for p in projects:
+        lang = p.get("language")
+        if lang:
+            lang_count[lang] = lang_count.get(lang, 0) + 1
+    top_languages = sorted(lang_count.items(), key=lambda x: x[1], reverse=True)[:8]
+
+    result = {
+        "username": username,
+        "name": user.get("name") or username,
+        "bio": user.get("bio") or "",
+        "location": user.get("location") or "Earth",
+        "avatar_url": user.get("avatar_url", ""),
+        "public_repos": len(projects),
+        "followers": user.get("followers", 0),
+        "following": user.get("following", 0),
+        "top_repos": top_repos,
+        "top_languages": [{"language": lang, "count": cnt} for lang, cnt in top_languages],
+        "platform": "gitlab",
+    }
+    return json.dumps(result)
+
+
+def url_to_base64_img(url: str) -> str:
+    """Download an image from a URL and convert it to a base64 Data URL to prevent hotlinking issues."""
+    if not url:
+        return ""
+    if url.startswith("data:image/"):
+        return url
+    try:
+        import base64
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        with httpx.Client(timeout=15) as client:
+            resp = client.get(url, headers=headers)
+            if resp.status_code == 200:
+                content_type = resp.headers.get("content-type", "image/jpeg")
+                if "image" not in content_type:
+                    content_type = "image/jpeg"
+                encoded = base64.b64encode(resp.content).decode("utf-8")
+                return f"data:{content_type};base64,{encoded}"
+    except Exception:
+        pass
+    return url
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tool 5: Scrape LinkedIn (mock — LinkedIn blocks API scraping without paid plan)
+# ─────────────────────────────────────────────────────────────────────────────
+@mcp.tool
+def scrape_linkedin(username: str) -> str:
+    """
+    Fetch LinkedIn profile data for a given username/profile ID.
+    Supports:
+      1. Apify API (set APIFY_API_TOKEN in .env) using harvestapi/linkedin-profile-scraper (No Cookies).
+      2. Proxycurl API (set PROXYCURL_API_KEY in .env) for real, complete profile data.
+      3. Official LinkedIn API (set LINKEDIN_TOKEN in .env) for token owner only.
+      4. Graceful Mock fallback if no API keys are provided.
+    """
+    # ── Option 1: Apify (harvestapi/linkedin-profile-scraper) ──────────────────────
+    apify_token = os.getenv("APIFY_API_TOKEN", "")
+    if apify_token:
+        try:
+            # Construct the target LinkedIn profile URL
+            profile_url = username
+            if not (profile_url.startswith("http://") or profile_url.startswith("https://")):
+                profile_url = f"https://www.linkedin.com/in/{username}"
+            
+            # API endpoint to run the actor synchronously and directly get dataset items
+            url = f"https://api.apify.com/v2/acts/harvestapi~linkedin-profile-scraper/run-sync-get-dataset-items?token={apify_token}&timeout=60"
+            
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "urls": [profile_url],
+                "profileUrls": [profile_url],
+                "profileScraperMode": "Profile details no email ($4 per 1k)"
+            }
+            
+            with httpx.Client(timeout=65) as client:
+                resp = client.post(url, json=payload, headers=headers)
+                
+                if resp.status_code in (200, 201):
+                    items = resp.json()
+                    if isinstance(items, list) and len(items) > 0:
+                        data = items[0]
+                        
+                        # Resilient mapping of keys (supporting camelCase, snake_case, etc.)
+                        name = (
+                            data.get("fullName")
+                            or data.get("full_name")
+                            or f"{data.get('firstName', '')} {data.get('lastName', '')}".strip()
+                            or f"{data.get('first_name', '')} {data.get('last_name', '')}".strip()
+                            or username
+                        )
+                        
+                        bio = data.get("headline") or data.get("occupation") or "Professional on LinkedIn"
+                        summary = data.get("summary") or data.get("about")
+                        if summary:
+                            bio += f" | {summary[:150]}..."
+                            
+                        # Extract Location
+                        location_data = data.get("location") or "Global"
+                        if isinstance(location_data, dict):
+                            location = location_data.get("name") or ", ".join(filter(None, [location_data.get("city"), location_data.get("country")])) or "Global"
+                        else:
+                            location = str(location_data)
+                            
+                        # Extract Skills
+                        raw_skills = data.get("skills", [])
+                        skills_list = []
+                        for s in raw_skills:
+                            if isinstance(s, dict):
+                                name_val = s.get("name") or s.get("title")
+                                if name_val:
+                                    skills_list.append(name_val)
+                            elif isinstance(s, str):
+                                skills_list.append(s)
+                        skills_list = skills_list[:5]
+                        top_skills = [{"language": s, "count": 1} for s in skills_list] if skills_list else [{"language": "Professional Skills", "count": 1}]
+                        
+                        # Extract Experiences
+                        raw_experiences = data.get("experiences") or data.get("experience") or []
+                        top_repos = []
+                        for exp in raw_experiences[:3]:
+                            if isinstance(exp, dict):
+                                company = exp.get("companyName") or exp.get("company_name") or exp.get("company") or "Company"
+                                title = exp.get("title") or exp.get("role") or "Role"
+                                desc = exp.get("description") or f"{title} at {company}"
+                                top_repos.append({
+                                    "name": f"{title} @ {company}",
+                                    "stars": 0,
+                                    "language": "Work Experience",
+                                    "description": desc[:100] + "..." if len(desc) > 100 else desc,
+                                })
+                                
+                        # Resilient extraction of the avatar URL
+                        avatar_url = ""
+                        # Try photo first (which is a string)
+                        if data.get("photo") and isinstance(data.get("photo"), str):
+                            avatar_url = data.get("photo")
+                        # Try profilePicture next (could be dict or string)
+                        elif data.get("profilePicture"):
+                            prof_pic = data.get("profilePicture")
+                            if isinstance(prof_pic, dict):
+                                avatar_url = prof_pic.get("url") or prof_pic.get("imageUrl") or ""
+                            elif isinstance(prof_pic, str):
+                                avatar_url = prof_pic
+                        # Fallback to other variants
+                        if not avatar_url:
+                            avatar_url = (
+                                data.get("profile_pic_url")
+                                or data.get("profilePhoto")
+                                or data.get("avatar_url")
+                                or ""
+                            )
+                        
+                        # Convert to base64 to bypass hotlink block & expire issues!
+                        if avatar_url and not avatar_url.startswith("data:"):
+                            avatar_url = url_to_base64_img(avatar_url)
+                            
+                        if not avatar_url:
+                            avatar_url = f"https://ui-avatars.com/api/?name={name}&background=0A66C2&color=fff&size=200"
+                        
+                        result = {
+                            "username": username,
+                            "name": name,
+                            "bio": bio,
+                            "location": location,
+                            "avatar_url": avatar_url,
+                            "public_repos": len(raw_experiences),
+                            "followers": data.get("connectionsCount") or data.get("connections") or 500,
+                            "following": 0,
+                            "top_repos": top_repos,
+                            "top_languages": top_skills,
+                            "platform": "linkedin",
+                        }
+                        return json.dumps(result)
+        except Exception:
+            pass
+
+    # ── Option 2: Proxycurl API ───────────────────────────────────────────────────
+    proxycurl_key = os.getenv("PROXYCURL_API_KEY", "")
+    if proxycurl_key:
+        try:
+            # Construct the target LinkedIn profile URL
+            profile_url = username
+            if not (profile_url.startswith("http://") or profile_url.startswith("https://")):
+                profile_url = f"https://www.linkedin.com/in/{username}"
+            
+            headers = {"Authorization": f"Bearer {proxycurl_key}"}
+            with httpx.Client(timeout=30) as client:
+                resp = client.get(
+                    "https://nubela.co/proxycurl/api/v2/linkedin",
+                    params={"url": profile_url, "fallback_to_cache": "on-error"},
+                    headers=headers,
+                )
+                
+                if resp.status_code == 200:
+                    data = resp.json()
+                    
+                    # 1. Format Name and Bio
+                    name = data.get("full_name") or f"{data.get('first_name', '')} {data.get('last_name', '')}".strip() or username
+                    bio = data.get("headline") or data.get("occupation") or "Professional on LinkedIn"
+                    if data.get("summary"):
+                        bio += f" | {data['summary'][:150]}..."
+                    
+                    # 2. Extract Location
+                    location = ", ".join(filter(None, [data.get("city"), data.get("state"), data.get("country_full_name")])) or "Global"
+                    
+                    # 3. Convert LinkedIn Skills to Card Languages/Skills
+                    skills_list = [s.get("name") for s in data.get("skills", []) if s.get("name")][:5]
+                    top_skills = [{"language": s, "count": 1} for s in skills_list] if skills_list else [{"language": "Professional Skills", "count": 1}]
+                    
+                    # 4. Map LinkedIn Work Experience to "Top Projects" (so the card visualizes them beautifully)
+                    top_repos = []
+                    for exp in data.get("experiences", [])[:3]:
+                        company = exp.get("company", "Company")
+                        title = exp.get("title", "Role")
+                        desc = exp.get("description", "") or f"{title} at {company}"
+                        top_repos.append({
+                            "name": f"{title} @ {company}",
+                            "stars": 0,
+                            "language": "Work Experience",
+                            "description": desc[:100] + "..." if len(desc) > 100 else desc,
+                        })
+                    
+                    avatar_url = data.get("profile_pic_url") or ""
+                    if avatar_url and not avatar_url.startswith("data:"):
+                        avatar_url = url_to_base64_img(avatar_url)
+                    if not avatar_url:
+                        avatar_url = f"https://ui-avatars.com/api/?name={name}&background=0A66C2&color=fff&size=200"
+
+                    result = {
+                        "username": username,
+                        "name": name,
+                        "bio": bio,
+                        "location": location,
+                        "avatar_url": avatar_url,
+                        "public_repos": len(data.get("experiences", [])),
+                        "followers": data.get("connections", 500),
+                        "following": 0,
+                        "top_repos": top_repos,
+                        "top_languages": top_skills,
+                        "platform": "linkedin",
+                    }
+                    return json.dumps(result)
+        except Exception:
+            pass
+
+    # ── Option 3: Official LinkedIn API fallback (token owner only) ───────────────
+    linkedin_token = os.getenv("LINKEDIN_TOKEN", "")
+    if linkedin_token:
+        try:
+            with httpx.Client(timeout=15) as client:
+                resp = client.get(
+                    "https://api.linkedin.com/v2/me",
+                    headers={
+                        "Authorization": f"Bearer {linkedin_token}",
+                        "X-Restli-Protocol-Version": "2.0.0",
+                    },
+                )
+                if resp.status_code == 200:
+                    user = resp.json()
+                    name = f"{user.get('localizedFirstName', '')} {user.get('localizedLastName', '')}".strip() or username
+                    result = {
+                        "username": username,
+                        "name": name,
+                        "bio": user.get("localizedHeadline", "Professional on LinkedIn"),
+                        "location": "",
+                        "avatar_url": "",
+                        "public_repos": 0,
+                        "followers": 0,
+                        "following": 0,
+                        "top_repos": [],
+                        "top_languages": [],
+                        "platform": "linkedin",
+                    }
+                    return json.dumps(result)
+        except Exception:
+            pass
+
+    # ── Option 4: Graceful fallback mock if no keys are configured ─────────────────
+    result = {
+        "username": username,
+        "name": username.replace("-", " ").replace("_", " ").title(),
+        "bio": "Professional on LinkedIn — update this card once connected to the API.",
+        "location": "Global",
+        "avatar_url": f"https://ui-avatars.com/api/?name={username}&background=0A66C2&color=fff&size=200",
+        "public_repos": 0,
+        "followers": 500,
+        "following": 0,
+        "top_repos": [],
+        "top_languages": [{"language": "Professional Skills", "count": 1}],
+        "platform": "linkedin",
+    }
+    return json.dumps(result)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tool 6: Generate Card HTML
+# ─────────────────────────────────────────────────────────────────────────────
+@mcp.tool
+def generate_card_html(username: str, github_data: str, analysis: str, theme_override: str = "auto", layout: str = "standard") -> str:
     """
     Generate a beautiful, self-contained HTML dev card.
     Inputs:
-      - username: GitHub username
-      - github_data: JSON string from scrape_github
+      - username: GitHub/GitLab/Bitbucket username
+      - github_data: JSON string from scrape_github, scrape_gitlab, or scrape_bitbucket
       - analysis: JSON string from analyze_profile
+      - theme_override: "auto" lets AI pick; else one of dark/light/neon/hacker/builder/researcher/designer/open-source-hero
+      - layout: "standard" | "compact" | "wide"
     Returns: A complete HTML string for the dev card.
     """
     data = json.loads(github_data)
@@ -175,7 +536,8 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
     vibe = profile.get("developer_vibe", "")
     skills = profile.get("top_skills", [])
     fun_fact = profile.get("fun_fact", "")
-    theme = profile.get("card_theme", "builder")
+    platform = data.get("platform", "github")
+    theme = theme_override if theme_override != "auto" else profile.get("card_theme", "builder")
 
     # Theme-specific styles
     themes = {
@@ -242,11 +604,12 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
     repos_html = ""
     for repo in top_repos:
         lang_dot = f'<span class="lang-dot"></span>{repo["language"]}' if repo.get("language") else ""
+        domain = f"{platform}.com"
         repos_html += f"""
         <div class="repo">
             <div class="repo-header">
                 <span class="repo-icon">📁</span>
-                <a href="https://github.com/{username}/{repo['name']}" target="_blank" class="repo-name">{repo['name']}</a>
+                <a href="https://{domain}/{username}/{repo['name']}" target="_blank" class="repo-name">{repo['name']}</a>
                 <span class="stars">⭐ {repo['stars']}</span>
             </div>
             <p class="repo-desc">{repo.get('description', '')[:80]}</p>
@@ -264,6 +627,35 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
         color = lang_colors[i % len(lang_colors)]
         lang_bar_html += f'<div style="width:{pct:.1f}%;background:{color};height:100%;"></div>'
         lang_labels_html += f'<span class="lang-label"><span style="background:{color};width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;"></span>{lang["language"]} {pct:.0f}%</span>'
+
+    # Layout-specific tweaks
+    card_max_width = "440px" if layout == "standard" else ("340px" if layout == "compact" else "680px")
+    avatar_size = "72px" if layout != "compact" else "52px"
+    card_padding = "32px" if layout != "compact" else "20px"
+    repos_to_show = top_repos if layout != "compact" else top_repos[:2]
+
+    # Rebuild repos_html with possibly fewer repos
+    repos_html = ""
+    for repo in repos_to_show:
+        lang_dot = f'<span class="lang-dot"></span>{repo["language"]}' if repo.get("language") else ""
+        domain = f"{platform}.com"
+        repos_html += f"""
+        <div class="repo">
+            <div class="repo-header">
+                <span class="repo-icon">📁</span>
+                <a href="https://{domain}/{username}/{repo['name']}" target="_blank" class="repo-name">{repo['name']}</a>
+                <span class="stars">⭐ {repo['stars']}</span>
+            </div>
+            <p class="repo-desc">{repo.get('description', '')[:80]}</p>
+            <span class="repo-lang">{lang_dot}</span>
+        </div>"""
+
+    if platform == 'gitlab':
+        platform_badge = '🦊 GitLab'
+    elif platform == 'linkedin':
+        platform_badge = '💼 LinkedIn'
+    else:
+        platform_badge = '🐙 GitHub'
 
     html = f"""<!DOCTYPE html>
 <html lang="en" data-mode="dark">
@@ -389,11 +781,11 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 20px;
-    padding: 32px;
-    max-width: 440px;
+    padding: {card_padding};
+    max-width: {card_max_width};
     width: 100%;
     backdrop-filter: blur(20px);
-    box-shadow: 0 0 60px color-mix(in srgb, var(--accent) 6%, transparent), 0 20px 60px rgba(0,0,0,0.4);
+    box-shadow: 0 0 60px rgba(0,0,0,0.15), 0 20px 60px rgba(0,0,0,0.4);
     position: relative;
     overflow: hidden;
     transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
@@ -426,6 +818,21 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
     font-family: 'JetBrains Mono', monospace;
     transition: all 0.4s;
   }}
+  .platform-badge {{
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: var(--badge-bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.4s;
+  }}
   .header {{
     display: flex;
     align-items: center;
@@ -433,11 +840,11 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
     margin-bottom: 20px;
   }}
   .avatar {{
-    width: 72px;
-    height: 72px;
+    width: {avatar_size};
+    height: {avatar_size};
     border-radius: 50%;
     border: 2px solid var(--accent);
-    box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 20%, transparent);
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
     object-fit: cover;
     transition: border-color 0.4s, box-shadow 0.4s;
   }}
@@ -644,6 +1051,7 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
 
 <div class="card">
   <span class="theme-badge">{t['icon']} {theme}</span>
+  <span class="platform-badge">{platform_badge}</span>
   <div class="header">
     <img class="avatar" src="{avatar_url}" alt="{name}" />
     <div class="header-info">
@@ -685,7 +1093,8 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
   </div>
 
   <div class="footer">
-    Generated by <a href="#">GitHub Dev Card Generator</a>
+    Generated by <a href="#">GitHub Dev Card Generator</a> &nbsp;•&nbsp;
+    <span id="view-count" style="color:var(--accent)">👁️ —</span> views
   </div>
 </div>
 
@@ -695,6 +1104,11 @@ def generate_card_html(username: str, github_data: str, analysis: str) -> str:
     document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('btn-' + mode).classList.add('active');
   }}
+  // Load view count
+  fetch('/analytics/{username}').then(r=>r.json()).then(d=>{{
+    const el = document.getElementById('view-count');
+    if(el && d.views !== undefined) el.textContent = '👁️ ' + d.views;
+  }}).catch(()=>{{}});
 </script>
 
 </body>
@@ -719,7 +1133,7 @@ def save_card(username: str, html: str) -> str:
     filepath = cards_dir / f"{username}.html"
     filepath.write_text(html, encoding="utf-8")
 
-    return f"/card/{username}"
+    return json.dumps({"url": f"/card/{username}", "username": username})
 
 
 # ─────────────────────────────────────────────────────────────────────────────

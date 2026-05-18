@@ -1,49 +1,155 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-mode="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Linus Torvalds — Dev Card</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" type="image/png" href="/frontend/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* ── Dark mode (default) ── */
+  [data-mode="dark"] {
+    --bg: linear-gradient(135deg, #0a0f0d 0%, #0d1a14 50%, #0a0f0d 100%);
+    --card-bg: rgba(13, 26, 20, 0.95);
+    --border: #00ff4130;
+    --accent: #00ff41;
+    --accent-dim: #00cc33;
+    --badge-bg: rgba(0, 255, 65, 0.1);
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --text-heading: #f0f6fc;
+    --stat-bg: rgba(255,255,255,0.03);
+    --stat-border: rgba(255,255,255,0.06);
+    --repo-bg: rgba(255,255,255,0.02);
+    --repo-border: rgba(255,255,255,0.06);
+    --footer-color: #484f58;
+    --section-color: #8b949e;
+  }
+
+  /* ── Light mode ── */
+  [data-mode="light"] {
+    --bg: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 50%, #f0f4ff 100%);
+    --card-bg: rgba(255,255,255,0.97);
+    --border: rgba(99,102,241,0.2);
+    --accent: #4f46e5;
+    --accent-dim: #3730a3;
+    --badge-bg: rgba(79,70,229,0.08);
+    --text: #374151;
+    --text-muted: #6b7280;
+    --text-heading: #111827;
+    --stat-bg: rgba(79,70,229,0.04);
+    --stat-border: rgba(79,70,229,0.12);
+    --repo-bg: rgba(79,70,229,0.03);
+    --repo-border: rgba(79,70,229,0.1);
+    --footer-color: #9ca3af;
+    --section-color: #6b7280;
+  }
+
+  /* ── Neon mode ── */
+  [data-mode="neon"] {
+    --bg: linear-gradient(135deg, #000000 0%, #0a0015 50%, #000000 100%);
+    --card-bg: rgba(5,0,20,0.97);
+    --border: rgba(255,0,255,0.3);
+    --accent: #ff00ff;
+    --accent-dim: #cc00cc;
+    --badge-bg: rgba(255,0,255,0.08);
+    --text: #e0d0ff;
+    --text-muted: #a080c0;
+    --text-heading: #ffffff;
+    --stat-bg: rgba(255,0,255,0.05);
+    --stat-border: rgba(255,0,255,0.15);
+    --repo-bg: rgba(255,0,255,0.03);
+    --repo-border: rgba(255,0,255,0.12);
+    --footer-color: #6040a0;
+    --section-color: #a080c0;
+  }
+
   body {
     font-family: 'Inter', -apple-system, sans-serif;
-    background: linear-gradient(135deg, #0f0a1a 0%, #1a0d2d 50%, #0f0a1a 100%);
+    background: var(--bg);
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    color: #c9d1d9;
+    color: var(--text);
+    transition: background 0.4s ease;
   }
+
+  /* ── Theme switcher bar ── */
+  .theme-switcher {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    background: rgba(0,0,0,0.3);
+    padding: 6px;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  [data-mode="light"] .theme-switcher {
+    background: rgba(255,255,255,0.8);
+    border-color: rgba(79,70,229,0.2);
+  }
+  .theme-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.5px;
+  }
+  [data-mode="light"] .theme-btn { color: rgba(0,0,0,0.4); }
+  .theme-btn:hover { color: rgba(255,255,255,0.9); transform: scale(1.05); }
+  [data-mode="light"] .theme-btn:hover { color: rgba(0,0,0,0.8); }
+  .theme-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 12px var(--accent);
+  }
+  [data-mode="light"] .theme-btn.active { color: #fff; }
+
   .card {
-    background: rgba(26, 13, 45, 0.95);
-    border: 1px solid #a371f730;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 20px;
     padding: 32px;
     max-width: 440px;
     width: 100%;
     backdrop-filter: blur(20px);
-    box-shadow: 0 0 60px #a371f710, 0 20px 60px rgba(0,0,0,0.5);
+    box-shadow: 0 0 60px rgba(0,0,0,0.15), 0 20px 60px rgba(0,0,0,0.4);
     position: relative;
     overflow: hidden;
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
   }
   .card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, transparent, #a371f7, transparent);
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    transition: background 0.4s;
   }
+  [data-mode="neon"] .card {
+    box-shadow: 0 0 40px rgba(255,0,255,0.15), 0 0 80px rgba(255,0,255,0.05), 0 20px 60px rgba(0,0,0,0.8);
+  }
+
   .theme-badge {
     position: absolute;
     top: 16px;
     right: 16px;
-    background: rgba(163, 113, 247, 0.1);
-    border: 1px solid #a371f730;
-    color: #a371f7;
+    background: var(--badge-bg);
+    border: 1px solid var(--border);
+    color: var(--accent);
     font-size: 11px;
     font-weight: 600;
     padding: 4px 10px;
@@ -51,6 +157,22 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     font-family: 'JetBrains Mono', monospace;
+    transition: all 0.4s;
+  }
+  .platform-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: var(--badge-bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.4s;
   }
   .header {
     display: flex;
@@ -62,37 +184,45 @@
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    border: 2px solid #a371f7;
-    box-shadow: 0 0 20px #a371f730;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
     object-fit: cover;
+    transition: border-color 0.4s, box-shadow 0.4s;
+  }
+  [data-mode="neon"] .avatar {
+    box-shadow: 0 0 20px rgba(255,0,255,0.4), 0 0 40px rgba(255,0,255,0.1);
   }
   .header-info h1 {
     font-size: 20px;
     font-weight: 700;
-    color: #f0f6fc;
+    color: var(--text-heading);
     line-height: 1.2;
+    transition: color 0.4s;
   }
   .header-info .username {
-    color: #a371f7;
+    color: var(--accent);
     font-size: 13px;
     font-family: 'JetBrains Mono', monospace;
     font-weight: 500;
+    transition: color 0.4s;
   }
   .header-info .location {
-    color: #8b949e;
+    color: var(--text-muted);
     font-size: 12px;
     margin-top: 2px;
+    transition: color 0.4s;
   }
   .vibe {
-    background: rgba(163, 113, 247, 0.1);
-    border-left: 3px solid #a371f7;
+    background: var(--badge-bg);
+    border-left: 3px solid var(--accent);
     padding: 12px 16px;
     border-radius: 0 10px 10px 0;
     margin-bottom: 20px;
     font-style: italic;
     font-size: 13px;
-    color: #c9d1d9;
+    color: var(--text);
     line-height: 1.5;
+    transition: all 0.4s;
   }
   .stats {
     display: flex;
@@ -102,31 +232,38 @@
   .stat {
     flex: 1;
     text-align: center;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--stat-bg);
+    border: 1px solid var(--stat-border);
     border-radius: 12px;
     padding: 12px 8px;
+    transition: all 0.4s;
   }
   .stat-value {
     font-size: 22px;
     font-weight: 700;
-    color: #a371f7;
+    color: var(--accent);
     font-family: 'JetBrains Mono', monospace;
+    transition: color 0.4s;
+  }
+  [data-mode="neon"] .stat-value {
+    text-shadow: 0 0 10px rgba(255,0,255,0.6);
   }
   .stat-label {
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: #8b949e;
+    color: var(--section-color);
     margin-top: 2px;
+    transition: color 0.4s;
   }
   .section-title {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    color: #8b949e;
+    color: var(--section-color);
     margin-bottom: 10px;
     font-weight: 600;
+    transition: color 0.4s;
   }
   .badges {
     display: flex;
@@ -135,24 +272,29 @@
     margin-bottom: 20px;
   }
   .badge {
-    background: rgba(163, 113, 247, 0.1);
-    border: 1px solid #a371f730;
-    color: #a371f7;
+    background: var(--badge-bg);
+    border: 1px solid var(--border);
+    color: var(--accent);
     padding: 5px 14px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
     font-family: 'JetBrains Mono', monospace;
+    transition: all 0.4s;
+  }
+  [data-mode="neon"] .badge {
+    box-shadow: 0 0 8px rgba(255,0,255,0.2);
   }
   .repo {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--repo-bg);
+    border: 1px solid var(--repo-border);
     border-radius: 10px;
     padding: 12px;
     margin-bottom: 8px;
-    transition: border-color 0.2s;
+    transition: all 0.25s;
   }
-  .repo:hover { border-color: #a371f750; }
+  .repo:hover { border-color: var(--accent); }
+  [data-mode="neon"] .repo:hover { box-shadow: 0 0 12px rgba(255,0,255,0.2); }
   .repo-header {
     display: flex;
     align-items: center;
@@ -161,34 +303,39 @@
   }
   .repo-icon { font-size: 14px; }
   .repo-name {
-    color: #a371f7;
+    color: var(--accent);
     text-decoration: none;
     font-weight: 600;
     font-size: 13px;
+    transition: color 0.4s;
   }
   .repo-name:hover { text-decoration: underline; }
   .stars {
     margin-left: auto;
     font-size: 12px;
-    color: #8b949e;
+    color: var(--text-muted);
+    transition: color 0.4s;
   }
   .repo-desc {
     font-size: 12px;
-    color: #8b949e;
+    color: var(--text-muted);
     line-height: 1.4;
     margin-bottom: 4px;
+    transition: color 0.4s;
   }
   .repo-lang {
     font-size: 11px;
-    color: #8b949e;
+    color: var(--text-muted);
+    transition: color 0.4s;
   }
   .lang-dot {
     width: 8px; height: 8px;
     border-radius: 50%;
-    background: #a371f7;
+    background: var(--accent);
     display: inline-block;
     margin-right: 4px;
     vertical-align: middle;
+    transition: background 0.4s;
   }
   .lang-bar {
     display: flex;
@@ -196,7 +343,7 @@
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 8px;
-    background: rgba(255,255,255,0.05);
+    background: rgba(128,128,128,0.1);
   }
   .lang-labels {
     display: flex;
@@ -206,37 +353,46 @@
   }
   .lang-label {
     font-size: 11px;
-    color: #8b949e;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
+    transition: color 0.4s;
   }
   .fun-fact {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--repo-bg);
+    border: 1px solid var(--repo-border);
     border-radius: 10px;
     padding: 12px 16px;
     font-size: 12px;
-    color: #8b949e;
+    color: var(--text-muted);
     line-height: 1.5;
+    transition: all 0.4s;
   }
-  .fun-fact strong {
-    color: #a371f7;
-  }
+  .fun-fact strong { color: var(--accent); transition: color 0.4s; }
   .footer {
     text-align: center;
     margin-top: 20px;
     padding-top: 16px;
-    border-top: 1px solid rgba(255,255,255,0.06);
+    border-top: 1px solid var(--repo-border);
     font-size: 11px;
-    color: #484f58;
+    color: var(--footer-color);
     font-family: 'JetBrains Mono', monospace;
+    transition: all 0.4s;
   }
-  .footer a { color: #8b5cf6; text-decoration: none; }
+  .footer a { color: var(--accent-dim); text-decoration: none; transition: color 0.4s; }
 </style>
 </head>
 <body>
+
+<div class="theme-switcher">
+  <button class="theme-btn active" onclick="setMode('dark')" id="btn-dark">🌙 Dark</button>
+  <button class="theme-btn" onclick="setMode('light')" id="btn-light">☀️ Light</button>
+  <button class="theme-btn" onclick="setMode('neon')" id="btn-neon">⚡ Neon</button>
+</div>
+
 <div class="card">
-  <span class="theme-badge">🌟 open-source-hero</span>
+  <span class="theme-badge">⚡ hacker</span>
+  <span class="platform-badge">🐙 GitHub</span>
   <div class="header">
     <img class="avatar" src="https://avatars.githubusercontent.com/u/1024025?v=4" alt="Linus Torvalds" />
     <div class="header-info">
@@ -246,7 +402,7 @@
     </div>
   </div>
 
-  <div class="vibe">"A low-level maestro who crafts fundamental tools and tinkers with both software and audio hardware."</div>
+  <div class="vibe">"A pioneering systems programmer with a passion for low-level innovation"</div>
 
   <div class="stats">
     <div class="stat">
@@ -254,7 +410,7 @@
       <div class="stat-label">Repos</div>
     </div>
     <div class="stat">
-      <div class="stat-value">303131</div>
+      <div class="stat-value">303370</div>
       <div class="stat-label">Followers</div>
     </div>
     <div class="stat">
@@ -264,7 +420,7 @@
   </div>
 
   <div class="section-title">Top Skills</div>
-  <div class="badges"><span class="badge">C Programming</span><span class="badge">Systems Programming</span><span class="badge">Digital Audio & Embedded Design</span></div>
+  <div class="badges"><span class="badge">Systems Programming</span><span class="badge">C Programming</span><span class="badge">Embedded Systems Development</span></div>
 
   <div class="section-title">Languages</div>
   <div class="lang-bar"><div style="width:81.8%;background:#f1e05a;height:100%;"></div><div style="width:9.1%;background:#3572A5;height:100%;"></div><div style="width:9.1%;background:#e34c26;height:100%;"></div></div>
@@ -276,7 +432,7 @@
             <div class="repo-header">
                 <span class="repo-icon">📁</span>
                 <a href="https://github.com/torvalds/HunspellColorize" target="_blank" class="repo-name">HunspellColorize</a>
-                <span class="stars">⭐ 344</span>
+                <span class="stars">⭐ 345</span>
             </div>
             <p class="repo-desc">Wrapper around 'less' to colorize spelling mistakes using Hunspell</p>
             <span class="repo-lang"><span class="lang-dot"></span>C</span>
@@ -285,7 +441,7 @@
             <div class="repo-header">
                 <span class="repo-icon">📁</span>
                 <a href="https://github.com/torvalds/AudioNoise" target="_blank" class="repo-name">AudioNoise</a>
-                <span class="stars">⭐ 4366</span>
+                <span class="stars">⭐ 4367</span>
             </div>
             <p class="repo-desc">Random digital audio effects</p>
             <span class="repo-lang"><span class="lang-dot"></span>C</span>
@@ -294,19 +450,34 @@
             <div class="repo-header">
                 <span class="repo-icon">📁</span>
                 <a href="https://github.com/torvalds/GuitarPedal" target="_blank" class="repo-name">GuitarPedal</a>
-                <span class="stars">⭐ 1917</span>
+                <span class="stars">⭐ 1919</span>
             </div>
             <p class="repo-desc">Linus learns analog circuits</p>
             <span class="repo-lang"><span class="lang-dot"></span>C</span>
         </div>
 
   <div class="fun-fact">
-    <strong>💡 Fun fact:</strong> He enjoys meticulously crafting custom guitar pedals, even designing their physical enclosures using OpenSCAD, revealing a passion for both analog circuits and 3D modeling.
+    <strong>💡 Fun fact:</strong> Linus Torvalds, the creator of Linux, has a secret talent for guitar pedals and audio effects, as evidenced by his GuitarPedal and AudioNoise repositories
   </div>
 
   <div class="footer">
-    Generated by <a href="#">GitHub Dev Card Generator</a>
+    Generated by <a href="#">GitHub Dev Card Generator</a> &nbsp;•&nbsp;
+    <span id="view-count" style="color:var(--accent)">👁️ —</span> views
   </div>
 </div>
+
+<script>
+  function setMode(mode) {
+    document.documentElement.setAttribute('data-mode', mode);
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + mode).classList.add('active');
+  }
+  // Load view count
+  fetch('/analytics/torvalds').then(r=>r.json()).then(d=>{
+    const el = document.getElementById('view-count');
+    if(el && d.views !== undefined) el.textContent = '👁️ ' + d.views;
+  }).catch(()=>{});
+</script>
+
 </body>
 </html>

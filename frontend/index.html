@@ -3,33 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GitHub Dev Card Generator — AI-Powered Developer Cards</title>
-  <meta name="description" content="Generate beautiful, AI-powered developer profile cards from any public GitHub username. Powered by Gemini AI.">
-  <link rel="icon" type="image/png" href="/frontend/favicon.png">
+  <title>Dev Card Generator — AI-Powered Developer Cards</title>
+  <meta name="description" content="Generate beautiful, AI-powered developer profile cards from any public GitHub, GitLab or LinkedIn username. Powered by Gemini AI.">
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/frontend/style.css">
+  <link rel="stylesheet" href="style.css?v=3.0">
 </head>
 <body>
+
+  <!-- Auth Bar -->
+  <div class="auth-bar" id="auth-bar">
+    <div class="auth-bar-inner">
+      <span class="auth-bar-brand">
+        <!-- Dev Card Generator wordmark icon -->
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><polyline points="7 8 11 12 7 16"/><line x1="13" y1="16" x2="17" y2="16"/>
+        </svg>
+        Dev Card Generator
+      </span>
+      <div class="auth-bar-actions" id="auth-bar-actions">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
 
   <div class="container">
     <!-- Header -->
     <header class="header">
       <div class="logo-icon">
-        <svg viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/>
-        </svg>
+        <img src="favicon.png" alt="Dev Card Generator" />
       </div>
-      <h1>GitHub Dev Card Generator</h1>
-      <p>Enter any public GitHub username and get a <span>beautiful AI-powered</span> developer card</p>
+      <h1>Dev Card Generator</h1>
+      <p>Enter any public <span>GitHub, GitLab or LinkedIn</span> username and get a <span>beautiful AI-powered</span> developer card</p>
     </header>
 
     <!-- Input Section -->
     <section class="input-section" id="input-section">
+
+      <!-- Platform Switcher -->
+      <div class="platform-switcher">
+        <button class="platform-btn active" id="btn-github" onclick="setPlatform('github')">
+          <!-- GitHub official SVG mark -->
+          <svg viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z"/></svg>
+          GitHub
+        </button>
+        <button class="platform-btn" id="btn-gitlab" onclick="setPlatform('gitlab')">
+          <!-- GitLab official SVG mark -->
+          <svg viewBox="0 0 380 380" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+            <path fill="#e24329" d="M282.83 170.73l-.27-.69-26.14-68.22a6.81 6.81 0 00-2.69-3.24 7 7 0 00-8 .43 7 7 0 00-2.32 3.52l-17.65 54h-71.46l-17.65-54a6.86 6.86 0 00-2.32-3.52 7 7 0 00-8-.43 6.87 6.87 0 00-2.69 3.24L97.44 170l-.26.69a48.54 48.54 0 0016.1 56.1l.09.07.24.17 39.82 29.82 19.7 14.91 12 9.06a8.07 8.07 0 009.65 0l12-9.06 19.7-14.91 40.06-30 .1-.08a48.56 48.56 0 0016.14-56.04z"/>
+            <path fill="#fc6d26" d="M282.83 170.73l-.27-.69a88.3 88.3 0 00-35.15 15.8L190 229.25c19.55 14.79 36.57 27.64 36.57 27.64l40.06-30 .1-.08a48.56 48.56 0 0016.1-56.08z"/>
+            <path fill="#fca326" d="M153.43 256.89l19.7 14.91 12 9.06a8.07 8.07 0 009.65 0l12-9.06 19.7-14.91S209 244 190 229.25c-19.55 14.79-36.57 27.64-36.57 27.64z"/>
+            <path fill="#fc6d26" d="M132.58 185.84A88.19 88.19 0 0097.44 170l-.26.69a48.54 48.54 0 0016.1 56.1l.09.07.24.17 39.82 29.82S170 244 190 229.25z"/>
+          </svg>
+          GitLab
+        </button>
+
+        <button class="platform-btn" id="btn-linkedin" onclick="setPlatform('linkedin')">
+          <!-- LinkedIn official SVG mark -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#0A66C2">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+          LinkedIn
+        </button>
+      </div>
+
       <div class="input-group">
         <div class="input-wrapper">
-          <span class="input-prefix">github.com/</span>
+          <span class="input-prefix" id="input-prefix">github.com/</span>
           <input
             type="text"
             id="username-input"
@@ -42,6 +84,35 @@
           <span class="btn-icon">✨</span>
           Generate Card
         </button>
+      </div>
+
+      <!-- Customization Panel -->
+      <div class="customize-toggle" onclick="toggleCustomize()" id="customize-toggle">
+        <span>⚙️ Customize Card</span>
+        <span class="toggle-arrow" id="toggle-arrow">▸</span>
+      </div>
+      <div class="customize-panel" id="customize-panel">
+        <div class="customize-row">
+          <label class="customize-label">Theme</label>
+          <div class="theme-options">
+            <button class="theme-opt active" data-theme="auto" onclick="setTheme(this)">✨ Auto (AI)</button>
+            <button class="theme-opt" data-theme="hacker" onclick="setTheme(this)">⚡ Hacker</button>
+            <button class="theme-opt" data-theme="builder" onclick="setTheme(this)">🚀 Builder</button>
+            <button class="theme-opt" data-theme="researcher" onclick="setTheme(this)">🔬 Researcher</button>
+            <button class="theme-opt" data-theme="designer" onclick="setTheme(this)">🎨 Designer</button>
+            <button class="theme-opt" data-theme="open-source-hero" onclick="setTheme(this)">🌟 OS Hero</button>
+            <button class="theme-opt" data-theme="light" onclick="setTheme(this)">☀️ Light</button>
+            <button class="theme-opt" data-theme="neon" onclick="setTheme(this)">🔮 Neon</button>
+          </div>
+        </div>
+        <div class="customize-row">
+          <label class="customize-label">Layout</label>
+          <div class="layout-options">
+            <button class="layout-opt active" data-layout="standard" onclick="setLayout(this)">Standard</button>
+            <button class="layout-opt" data-layout="compact" onclick="setLayout(this)">Compact</button>
+            <button class="layout-opt" data-layout="wide" onclick="setLayout(this)">Wide</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -70,7 +141,7 @@
       </div>
       <div class="loading-status">
         <div class="loading-spinner"></div>
-        <span id="loading-text">Scraping GitHub profile...</span>
+        <span id="loading-text">Scraping profile...</span>
       </div>
     </section>
 
@@ -79,13 +150,14 @@
       <div class="result-header">
         <span class="result-title">✅ Card Generated Successfully</span>
         <div class="result-actions">
-          <button class="action-btn" id="share-btn" onclick="copyCardUrl()">
-            📋 Copy Link
-          </button>
-          <button class="action-btn" id="open-btn" onclick="openCard()">
-            🔗 Open Card
-          </button>
+          <button class="action-btn" id="share-btn" onclick="copyCardUrl()">📋 Copy Link</button>
+          <button class="action-btn" id="open-btn" onclick="openCard()">🔗 Open Card</button>
+          <button class="action-btn" id="png-btn" onclick="exportPNG()">⬇️ PNG</button>
+          <button class="action-btn" id="pdf-btn" onclick="exportPDF()">📄 PDF</button>
         </div>
+      </div>
+      <div class="analytics-badge" id="analytics-badge" style="display:none">
+        <span id="view-count-display">👁️ 0 views</span>
       </div>
       <div class="card-frame">
         <iframe id="card-iframe" title="Generated Dev Card"></iframe>
@@ -98,7 +170,7 @@
         <div class="error-icon">😵</div>
         <div class="error-title" id="error-title">Oops! Something went wrong</div>
         <div class="error-message" id="error-message">
-          We couldn't generate a card for that username. Make sure it's a valid public GitHub profile.
+          We couldn't generate a card for that username. Make sure it's a valid public profile.
         </div>
         <button class="error-retry" onclick="resetUI()">Try Another Username</button>
       </div>
@@ -107,15 +179,20 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <div>Built with ❤️ using <a href="https://github.com/google/adk-python" target="_blank">Google ADK</a> + <a href="https://ai.google.dev" target="_blank">Gemini AI</a></div>
+    <div>Built with ❤️ using <a href="https://groq.com" target="_blank">Groq</a> + <a href="https://fastapi.tiangolo.com" target="_blank">FastAPI</a></div>
     <div class="tech-stack">
-      <span class="tech-badge">ADK</span>
+      <span class="tech-badge">Groq</span>
+      <span class="tech-badge">Llama 3.3</span>
       <span class="tech-badge">FastMCP</span>
-      <span class="tech-badge">Gemini 2.5</span>
       <span class="tech-badge">FastAPI</span>
+      <span class="tech-badge">OAuth 2.0</span>
+      <span class="tech-badge">Analytics</span>
     </div>
   </footer>
 
-  <script src="/frontend/script.js"></script>
+  <!-- Export libraries (loaded lazily) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="script.js?v=3.0"></script>
 </body>
 </html>

@@ -5,3 +5,6 @@ __pycache__/
 .env
 *.env
 backend/.env
+frontend/cards/*.html
+frontend/cards/cache/
+frontend/analytics.json

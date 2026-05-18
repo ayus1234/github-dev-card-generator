@@ -1,25 +1,23 @@
-import asyncio
-from agent import get_agent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai import types
+"""
+Quick test for the Groq-powered card generation pipeline.
+Run with: python test_agent.py
+"""
 
-async def main():
-    agent = get_agent()
-    session_service = InMemorySessionService()
-    runner = Runner(agent=agent, app_name="test", session_service=session_service)
-    
-    session = await session_service.create_session(app_name="test", user_id="u1", session_id="s1")
-    
-    message = types.Content(role="user", parts=[types.Part(text="Generate a dev card for GitHub user: ayus1234")])
-    
-    try:
-        async for event in runner.run_async(user_id="u1", session_id="s1", new_message=message):
-            print("EVENT:", event)
-    except Exception as e:
-        print("EXCEPTION:", e)
-        import traceback
-        traceback.print_exc()
+from agent import run_pipeline
+
+
+def main():
+    print("Testing card generation pipeline with Groq...\n")
+    result = run_pipeline(
+        username="torvalds",
+        platform="github",
+        theme_override="auto",
+        layout="standard",
+    )
+    print(f"Username : {result['username']}")
+    print(f"Card URL : {result['card_url']}")
+    print(f"Message  : {result['message']}")
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
