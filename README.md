@@ -42,9 +42,9 @@ github-dev-card-generator/
 │   ├── style.css              # External styles, color tokens & micro-animations
 │   ├── script.js              # State engine, dynamic loading steps & PDF/PNG export logic
 │   ├── favicon.png            # Application logo & browser icon asset
-│   ├── analytics.json         # Local view-tracking storage database [Git-ignored]
-│   └── cards/                 # Output folder for generated profile HTMLs [Git-ignored]
-│       └── cache/             # Local scraped profile JSON cache database [Git-ignored]
+│   ├── analytics.json         # Local view-tracking storage database
+│   └── cards/                 # Output folder for generated profile HTMLs
+│       └── cache/             # Local scraped profile JSON cache database
 │
 ├── backend/                   # FastAPI Web Server & AI Engine
 │   ├── main.py                # REST endpoints, OAuth 2.0 flows, and FastMCP server hooks
@@ -52,7 +52,7 @@ github-dev-card-generator/
 │   ├── mcp_server.py          # FastMCP server exposing scraper tools & Base64 auto-embedder
 │   ├── requirements.txt       # Python dependencies (FastAPI, Groq, FastMCP, httpx)
 │   ├── test_agent.py          # Local validation script to run pipeline tests
-│   └── .env                   # Local configuration for Groq, Apify & OAuth secrets [Git-ignored]
+│   └── .env                   # Local configuration for Groq, Apify & OAuth secrets
 │
 ├── .env.example               # Template environment configuration guide for deployment
 ├── Dockerfile                 # Unified container definition for GCP/Production deployment
