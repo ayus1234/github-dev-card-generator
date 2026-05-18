@@ -19,7 +19,12 @@ from groq import Groq
 load_dotenv(dotenv_path=pathlib.Path(__file__).parent / ".env")
 
 # ── Groq client setup ────────────────────────────────────────────────────────
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+def get_groq_client():
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY environment variable is missing. Please set it in your environment or .env file.")
+    return Groq(api_key=api_key)
+
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 # ── FastMCP server ────────────────────────────────────────────────────────────
@@ -131,7 +136,7 @@ GitHub Profile Data:
 
 Respond with ONLY valid JSON, no markdown, no code fences."""
 
-    response = groq_client.chat.completions.create(
+    response = get_groq_client().chat.completions.create(
         model=GROQ_MODEL,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
