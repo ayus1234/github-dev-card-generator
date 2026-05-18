@@ -37,23 +37,28 @@ You can try out the live version of the generator deployed on Google Cloud Run h
 ```text
 github-dev-card-generator/
 │
-├── frontend/                  # Web Interface
-│   ├── index.html             # Main HTML structure
-│   ├── style.css              # External stylesheet
-│   ├── script.js              # API calls, state management & exports
-│   └── cards/                 # Generated HTML Dev Cards
-│       └── cache/             # Local scraped profile JSON cache
+├── frontend/                  # Web Interface & Static Asset Hosting
+│   ├── index.html             # Premium glassmorphism layout & theme switcher
+│   ├── style.css              # External styles, color tokens & micro-animations
+│   ├── script.js              # State engine, dynamic loading steps & PDF/PNG export logic
+│   ├── favicon.png            # Application logo & browser icon asset
+│   ├── analytics.json         # Local view-tracking storage database [Git-ignored]
+│   └── cards/                 # Output folder for generated profile HTMLs [Git-ignored]
+│       └── cache/             # Local scraped profile JSON cache database [Git-ignored]
 │
-├── backend/                   # FastAPI Server
-│   ├── main.py                # REST API endpoints & server setup
-│   ├── agent.py               # AI Pipeline & caching orchestrator
-│   ├── mcp_server.py          # FastMCP server, scrapers & base64 helper
-│   └── requirements.txt       # Python dependencies
+├── backend/                   # FastAPI Web Server & AI Engine
+│   ├── main.py                # REST endpoints, OAuth 2.0 flows, and FastMCP server hooks
+│   ├── agent.py               # AI pipeline orchestrator & high-performance file caching logic
+│   ├── mcp_server.py          # FastMCP server exposing scraper tools & Base64 auto-embedder
+│   ├── requirements.txt       # Python dependencies (FastAPI, Groq, FastMCP, httpx)
+│   ├── test_agent.py          # Local validation script to run pipeline tests
+│   └── .env                   # Local configuration for Groq, Apify & OAuth secrets [Git-ignored]
 │
-├── Dockerfile                 # Unified container deployment
-├── docker-compose.yml         # Docker orchestration
-├── .gitignore                 # Ignored files (.env, .venv, cards, cache, etc.)
-└── README.md                  # This documentation
+├── .env.example               # Template environment configuration guide for deployment
+├── Dockerfile                 # Unified container definition for GCP/Production deployment
+├── docker-compose.yml         # Simple local orchestrator for rapid deployment
+├── .gitignore                 # Excludes local cards, cache, analytics, and secrets from git
+└── README.md                  # Detailed developer documentation (this file)
 ```
 
 ---
