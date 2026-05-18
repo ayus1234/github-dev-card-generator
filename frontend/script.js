@@ -1,5 +1,8 @@
 // ── State ───────────────────────────────────────────────────────────────────
-const BACKEND_URL = 'http://localhost:8080';
+// Resolve backend host dynamically depending on the current execution context
+const BACKEND_URL = window.location.origin.includes(':3000')
+  ? 'http://localhost:8080'
+  : window.location.origin;
 let currentCardUrl   = '';
 let currentUsername  = '';
 let selectedPlatform = 'github';

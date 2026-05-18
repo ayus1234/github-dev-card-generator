@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=pathlib.Path(__file__).parent / ".env")
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
@@ -30,6 +31,7 @@ from agent import run_pipeline
 # ── Config ─────────────────────────────────────────────────────────────────────
 SESSION_SECRET    = os.getenv("SESSION_SECRET_KEY", "dev-secret-change-me")
 BACKEND_URL       = os.getenv("BACKEND_URL", "http://localhost:8080")
+FRONTEND_URL      = os.getenv("FRONTEND_URL") or (BACKEND_URL if BACKEND_URL != "http://localhost:8080" else "http://localhost:3000")
 
 # GitHub OAuth
 GITHUB_CLIENT_ID     = os.getenv("GITHUB_CLIENT_ID", "")
@@ -165,7 +167,7 @@ async def auth_callback(code: str, state: str, response: Response):
         "access_token": access_token,
     }
     token = create_session_token(session_data)
-    redirect = RedirectResponse(url="http://localhost:3000/", status_code=302)
+    redirect = RedirectResponse(url=f"{FRONTEND_URL}/", status_code=302)
     redirect.set_cookie("session", token, httponly=True, samesite="lax", max_age=86400 * 7)
     return redirect
 
@@ -221,7 +223,7 @@ async def auth_callback_gitlab(code: str, state: str, response: Response):
         "provider": "gitlab",
     }
     token = create_session_token(session_data)
-    redirect = RedirectResponse(url="http://localhost:3000/", status_code=302)
+    redirect = RedirectResponse(url=f"{FRONTEND_URL}/", status_code=302)
     redirect.set_cookie("session", token, httponly=True, samesite="lax", max_age=86400 * 7)
     return redirect
 
@@ -255,7 +257,7 @@ async def auth_callback_linkedin(
     if error:
         detail = error_description or error
         return RedirectResponse(
-            url=f"http://localhost:3000/?auth_error={detail}",
+            url=f"{FRONTEND_URL}/?auth_error={detail}",
             status_code=302,
         )
     if not code:
@@ -292,7 +294,7 @@ async def auth_callback_linkedin(
         "provider": "linkedin",
     }
     token = create_session_token(session_data)
-    redirect = RedirectResponse(url="http://localhost:3000/", status_code=302)
+    redirect = RedirectResponse(url=f"{FRONTEND_URL}/", status_code=302)
     redirect.set_cookie("session", token, httponly=True, samesite="lax", max_age=86400 * 7)
     return redirect
 
@@ -317,7 +319,7 @@ async def auth_me(request: Request):
 @app.get("/auth/logout")
 async def auth_logout(response: Response):
     """Clear the session cookie."""
-    resp = RedirectResponse(url="http://localhost:3000/", status_code=302)
+    resp = RedirectResponse(url=f"{FRONTEND_URL}/", status_code=302)
     resp.delete_cookie("session")
     return resp
 
@@ -393,6 +395,11 @@ async def get_card(username: str):
     if not card_path.exists():
         raise HTTPException(status_code=404, detail=f"Card not found for '{username}'")
     return HTMLResponse(content=card_path.read_text(encoding="utf-8"))
+
+# ── Serve Frontend ─────────────────────────────────────────────────────────────
+frontend_dir = pathlib.Path(__file__).parent.parent / "frontend"
+if frontend_dir.exists():
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
 # ── Run ────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
